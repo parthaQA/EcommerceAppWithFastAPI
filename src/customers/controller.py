@@ -1,0 +1,125 @@
+import uuid
+from datetime import timedelta, datetime, timezone
+from os import access
+
+from click import DateTime
+from fastapi import HTTPException, Request
+from src.utils.helper import Helper
+from src.customers.dtos import CustomerSchema, CustomerRegisterSchema, CustomerLoginSchema
+from src.customers.models import CustomerModel, CustomerRegistrationModel, RefreshTokenModel
+from sqlalchemy.orm import Session
+import jwt
+from src.utils.settings import settings
+
+class CustomerController:
+
+    def create_customer(self, body: CustomerSchema, db: Session):
+        customer = CustomerModel(
+            name=body.name, email=body.email, gender=body.gender,
+            address=body.address, mobile=body.mobile, pincode=body.pincode,
+            is_active=body.is_active
+        )
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+
+        print(body.model_dump())
+        return customer
+
+
+    def get_all_customers(self, db: Session):
+        all_customers = db.query(CustomerModel).all()
+        return all_customers
+
+
+    def get_customer_by_id(self, customer_id: str, db: Session):
+        a_customer = db.query(CustomerModel).get(customer_id)
+        if not a_customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        return a_customer
+
+
+    def register_customer(self,body: CustomerRegisterSchema, db: Session):
+        is_customer_exist = (db.query(CustomerModel)
+        .filter(CustomerModel.mobile == body.mobile)
+        .first())
+        if not is_customer_exist:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        is_number_exist =   (db.query(CustomerRegistrationModel)
+        .filter(CustomerRegistrationModel.mobile == body.mobile)
+        .first())
+        if is_number_exist:
+            raise HTTPException(status_code=400, detail="number already exist")
+        hashed_password = Helper.generate_hashed_password(body.password)
+        body.password = hashed_password
+        customer_registration_data = CustomerRegistrationModel(mobile=body.mobile, password=hashed_password)
+        db.add(customer_registration_data)
+        db.commit()
+        db.refresh(customer_registration_data)
+        return customer_registration_data
+
+
+    def customer_login(self, body: CustomerLoginSchema, db: Session):
+        is_customer_exist = (db.query(CustomerModel)
+                             .filter(CustomerModel.mobile == body.mobile)
+                             .first())
+        if not is_customer_exist:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        is_number_exist = (db.query(CustomerRegistrationModel)
+                           .filter(CustomerRegistrationModel.mobile == body.mobile)
+                           .first())
+        if not is_number_exist:
+            raise HTTPException(status_code=401, detail="unauthorized access because of wrong mobile")
+        print(is_number_exist.password)
+        if not Helper.verify_password(body.password, is_number_exist.password):
+            raise HTTPException(status_code=401, detail="unauthorized access because of wrong password")
+
+        exp_time = datetime.now(timezone.utc) + timedelta(minutes=settings.EXP_TIME)
+
+        access_token = jwt.encode({"mobile": is_number_exist.mobile, "exp":exp_time},
+                           settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+        decode_token = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        print("decoded token", decode_token)
+
+        #generate new refresh token
+        refresh_token = str(uuid.uuid4())
+        hashed_token = Helper.generate_hashed_password(refresh_token)
+        refresh_entry = RefreshTokenModel(
+            mobile=is_number_exist.mobile,
+            token=hashed_token
+        )
+        db.add(refresh_entry)
+        db.commit()
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+
+
+    def is_authenticated(self, request: Request, db: Session):
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            raise HTTPException(status_code=401, detail="Missing token")
+
+        try:
+            token = auth_header.split(" ")[1]
+
+            payload = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=[settings.ALGORITHM]
+            )
+
+            return {
+                "message": "Authenticated",
+                "mobile": payload.get("mobile")
+            }
+
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired")
+
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")

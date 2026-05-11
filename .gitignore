@@ -1,0 +1,35 @@
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Local DB / sqlite
+*.db
+*.sqlite3
+
+# Build / packaging
+build/
+dist/
+*.egg-info/

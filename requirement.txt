@@ -1,0 +1,8 @@
+fastapi[standard]
+pydantic-settings
+pydantic
+SQLAlchemy
+redis-7.4.0
+
+
+##fastapi dev main.py --reload
