@@ -33,7 +33,7 @@ class CustomerController:
 
 
     def get_customer_by_id(self, customer_id: str, db: Session):
-        a_customer = db.query(CustomerModel).get(customer_id)
+        a_customer = db.query(CustomerModel).get(customer_id).first()
         if not a_customer:
             raise HTTPException(status_code=404, detail="Customer not found")
         return a_customer
@@ -97,8 +97,8 @@ class CustomerController:
             "refresh_token": refresh_token
         }
 
-
-    def is_authenticated(self, request: Request, db: Session):
+    @staticmethod
+    def is_authenticated(request: Request):
         auth_header = request.headers.get("Authorization")
 
         if not auth_header:
