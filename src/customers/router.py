@@ -20,8 +20,8 @@ def get_all_customers(db: Session=Depends(get_db)):
     return CustomerController().get_all_customers(db)
 
 @customer_routes.get(path="/is_auth", status_code=status.HTTP_200_OK, summary="authenticate a customer")
-def is_authenticated(request: Request, db: Session=Depends(get_db)):
-    return CustomerController().is_authenticated(request, db)
+def is_authenticated(request: Request):
+    return CustomerController().is_authenticated(request)
 
 @customer_routes.get(path="/{customer_id}", response_model=CustomerResponseSchema, status_code=status.HTTP_200_OK,  summary="Get customer by id")
 def get_customer(customer_id: str, db: Session=Depends(get_db)):
