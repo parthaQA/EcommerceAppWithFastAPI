@@ -1,5 +1,5 @@
 from src.products.dtos import ProductSchema
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -9,4 +9,25 @@ class CartResponseSchema(BaseModel):
 
     created_date: datetime
     modified_date: datetime
+
+class CartItemSchema(BaseModel):
+    product_id: int = Field(..., ge=0, strict=True)
+    quantity: int = Field(..., ge=0, strict=True)
+    is_checkout: bool = Field(default=False, strict=True)
+
+    model_config = ConfigDict(from_attributes=True)
+
+class CartProductSchema(BaseModel):
+    product_id: int
+    product_details: list[ProductSchema]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CartProductsResponseSchema(BaseModel):
+    cart_id: int
+    cart_products: CartProductSchema
+
+    model_config = ConfigDict(from_attributes=True)
+
 

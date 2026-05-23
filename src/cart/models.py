@@ -1,5 +1,5 @@
 from pydantic import ConfigDict
-from sqlalchemy import Column, String, DateTime, Integer, Float, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, Float, ForeignKey, Boolean
 from src.utils.db import BASE
 from datetime import datetime, timedelta, timezone
 
@@ -30,7 +30,10 @@ class CartItemModel(BASE):
     id = Column(Integer, primary_key=True)
     cart_id = Column(String, ForeignKey("cart.cart_id"))
     product_id = Column(Integer, ForeignKey("products.product_id"))
-    quantity = Column(Integer, default=0)
-
+    quantity = Column(Integer, default=1)
+    is_checkout = Column(Boolean, default=False, nullable=False)
+    created_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    modified_date = Column(DateTime, default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
 
     model_config = ConfigDict(from_attributes=True)
