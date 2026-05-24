@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, Request
-from src.cart.dtos import CartResponseSchema, CartItemSchema, CartProductsResponseSchema, CartProductSchema
+from src.cart.dtos import CartResponseSchema, CartItemSchema, ProductResponseSchema, CartProductsResponseSchema, CartProductSchema
 from src.cart.models import CartModel, CartItemModel
-from src.products.dtos import ProductSchema
 from src.utils.helper import Helper
 from src.customers.controller import CustomerController
 from src.customers.models import CustomerModel
@@ -91,22 +90,42 @@ class CartController:
         db.commit()
         db.refresh(cart_products)
 
-        product_response = ProductSchema(
-        product_name=is_product_exist.product_name,
-        product_description=is_product_exist.product_description,
-        product_price=is_product_exist.product_price,
-        product_quantity=body.quantity,
-        category_id=is_product_exist.category_id
-    )
-        cart_product = CartProductSchema(
-        product_id=is_product_exist.product_id,
-        product_details=[product_response]
-    )
+        # fetch all products in cart
+        cart_items = (
+        db.query(CartItemModel)
+        .filter(CartItemModel.cart_id == cart_id)
+        .all()
+        )
+        
+        products = []
+        total_bill = 0
+        total_quantity = 0
+
+
+        for item in cart_items:
+            prod = db.query(ProductModel).filter(
+            ProductModel.product_id == item.product_id
+            ).first()
+
+            products.append(ProductResponseSchema(
+                product_id=prod.product_id,
+                product_name=prod.product_name,
+                product_description=prod.product_description,
+                product_price=prod.product_price,
+                product_quantity=item.quantity,
+            ))
+
+            total_bill += prod.product_price * item.quantity
+            total_quantity += item.quantity
+
 
         return {
             "success": True,
-            "data": CartProductsResponseSchema(cart_id=cart_id,
-            cart_products=cart_product
+            "data": CartProductsResponseSchema(
+                cart_id=cart_id,
+                total_bill=total_bill,
+                total_product_quantity=total_quantity,
+                cart_products=CartProductSchema(product_details=products),
             ),
             "message": "product is added to cart"
         }

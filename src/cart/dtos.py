@@ -17,15 +17,29 @@ class CartItemSchema(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class CartProductSchema(BaseModel):
+
+class ProductResponseSchema(BaseModel):
     product_id: int
-    product_details: list[ProductSchema]
+    product_name: str
+    product_price: float
+    product_quantity: int
+    created_date: Optional[datetime] = None
+    modified_date: Optional[datetime] = None
+    product_image_url: Optional[str] = None
+    product_description: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class CartProductSchema(BaseModel):
+    product_details: list[ProductResponseSchema]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class CartProductsResponseSchema(BaseModel):
-    cart_id: int
+    cart_id: str
+    total_bill: float
+    total_product_quantity: int
     cart_products: CartProductSchema
 
     model_config = ConfigDict(from_attributes=True)
