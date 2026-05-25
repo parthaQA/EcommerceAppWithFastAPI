@@ -1,7 +1,7 @@
 Technical Design Document (TDD): Fast_API Ecommerce Backend
 
 1) Purpose
-This document describes the architecture, modules, data models, APIs, configuration, and runtime behavior of the Fast_API backend application.
+This document describes the architecture, modules, data models, APIs, configuration, and runtime behavior of the Fast_API backend application and also has unit testing in place to test the logic.
 
 2) Scope
 In scope
@@ -13,11 +13,7 @@ In scope
 - Caching via Redis (async)
 - Startup/shutdown behavior
 
-Out of scope (current)
-- Automated tests, CI/CD pipelines
-- Database migration tooling (Alembic)
-- Deployment (Docker/Kubernetes)
-- Observability (structured logging, tracing, metrics)
+
 
 3) Tech Stack
 - FastAPI
@@ -25,6 +21,8 @@ Out of scope (current)
 - Pydantic
 - pydantic-settings
 - Redis (async client)
+- pytest
+- pytest-mock
 
 4) High-Level Architecture
 The app follows a feature-folder modular structure:
@@ -70,6 +68,15 @@ Fast_API/
       controller.py
       dtos.py
       models.py
+      carts/
+      router.py
+      controller.py
+      dtos.py
+      models.py
+  tests/
+    conftest.py
+    test_customer.py
+      
 
 6) Application Entry Point (main.py)
 Responsibilities
