@@ -34,6 +34,6 @@ def register_customer(body: CustomerRegisterSchema, db: Session=Depends(get_db))
 
 
 @customer_routes.post(path="/login", status_code=status.HTTP_200_OK, summary="Login a customer")
-def customer_login(body: CustomerLoginSchema, db: Session=Depends(get_db)):
-    return CustomerController().customer_login(body, db)
+async def customer_login(request: Request, body: CustomerLoginSchema, db: Session=Depends(get_db)):
+    return await CustomerController().customer_login(body, db, request)
 

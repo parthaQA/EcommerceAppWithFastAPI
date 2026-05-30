@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     EXP_TIME: int
+    LOGIN_MAX_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 15
 
 
 
